@@ -19,7 +19,7 @@
 #   if there are 10 stimuli in training.data then the first stimulus will have encoding strength
 #   1*decay.rate^9. The second will be 1*decay.rate^8. And so on... The most recent stimulus should
 #   be 1*decay.rate^0 (which is 1). This means that a decay.rate of 1 means no decay, and
-#   a decay rate of 0 means that only the last item has any effect on the categorization.
+#   a decay rate of 0 means that only the last. item has any effect on the categorization.
 # - Your first step should be to calculate the weight for each item in training.data, and add that
 #   weight to the training.data data frame.
 # - Then you should calculate the Euclidean Distance between the target stimulus (x.val, y.val)
@@ -34,6 +34,19 @@
 sample.training.data <- data.frame(x=c(0.5,0.6), y=c(0.4,0.3), category=c(1,2))
 
 exemplar.memory.limited <- function(training.data, x.val, y.val, target.category, sensitivity, decay.rate){
+  for(i in training.data){
+    current.row <- length(training.data) + 1
+    j <- 1
+    while(j < current.row){
+      training.data$weight[j] <- 1*(decay.rate^(current.row - j))
+      j <- j + 1
+      array$distance[j] <- sqrt(abs(x.val-training.data$x[j])^2 + abs(y.val-training.data$y[j])^2)
+      array$similarity[j] <- exp(-sensitivity*distance)
+      array$mweighted.simularity[j] <- array$simularity[j] * training.data$weight[j]
+      }}
+  
+  
+  
   return(NA)
 }
 
@@ -62,3 +75,5 @@ sample.data.set[4,]
 exemplar.memory.log.likelihood <- function(all.data, sensitivity, decay.rate){
   return(NA)
 }
+
+
