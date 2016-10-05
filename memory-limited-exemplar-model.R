@@ -34,20 +34,23 @@
 sample.training.data <- data.frame(x=c(0.5,0.6), y=c(0.4,0.3), category=c(1,2))
 
 exemplar.memory.limited <- function(training.data, x.val, y.val, target.category, sensitivity, decay.rate){
-  
+    if(is.data.frame(training.data) && nrow(training.data)==0)){
+      # above line taken from: http://stackoverflow.com/questions/28556658
+      return(.5)
+    }
     current.row <- length(training.data) + 1
     j <- 1
     while(j < current.row){
       training.data$weight[j] <- 1*(decay.rate^(current.row - j))
-      array$distance[j] <- sqrt(abs(x.val-training.data$x[j])^2 + abs(y.val-training.data$y[j])^2)
-      array$similarity[j] <- exp(-sensitivity*distance)
-      array$mweighted.simularity[j] <- array$simularity[j] * training.data$weight[j]
+      training.data$distance[j] <- sqrt(abs(x.val-training.data$x[j])^2 + abs(y.val-training.data$y[j])^2)
+      training.data$similarity[j] <- exp(-sensitivity * training.data$distance[j])
+      training.data$mweighted.similarity[j] <- training.data$similarity[j] * training.data$weight[j]
       j <- j + 1
       }
-    probability <- sum(array$mweighted.simularity) / sum(array$similarity)
+    probability <- sum(training.data$mweighted.similarity) / sum(training.data$similarity)
     return(probability)
 }
-
+exemplar.memory.limited(sample.training.data, .5, .5, TRUE, .5, .5) 
 # Once you have the model implemented, write the log-likelihood function for a set of data.
 # The set of data for the model will look like this:
 
@@ -71,12 +74,23 @@ sample.data.set[4,]
 # Don't forget that decay rate should be between 0 and 1, and that sensitivity should be > 0.
 
 exemplar.memory.log.likelihood <- function(all.data, sensitivity, decay.rate){
- row.index <- 1
- for(c.row in all.data){
-   all.data$probability <- exemplar.memory.limited(all.data[1:row.index,], c.row$x, c.row$y, c.row$category, sensitivity, decay.rate)
+  c.row <- 1
+ for(i in all.data){
+   all.data$probability <- exemplar.memory.limited(all.data[0:row.index,], all.data[c.row,]$x, all.data[c.row,]$y, all.data[c.row,]$category, sensitivity, decay.rate)
    row.index <- row.index + 1
+   c.row <- c.row + 1
  }
- return(NA)
+ all.data$likelihood <- mapply(function(response, prob){
+   
+   if(response == TRUE){
+     return(prob)}
+   else{
+     return(1-prob)}
+ },
+all.data$correct, all.data$probability)
+ 
+ loglikelihood <- sum(log(all.data$likelihood))
+ return(loglikelihood)
 }
 
-
+exemplar.memory.log.likelihood(sample.data.set, .5, .5)
