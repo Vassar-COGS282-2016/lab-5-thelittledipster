@@ -34,20 +34,18 @@
 sample.training.data <- data.frame(x=c(0.5,0.6), y=c(0.4,0.3), category=c(1,2))
 
 exemplar.memory.limited <- function(training.data, x.val, y.val, target.category, sensitivity, decay.rate){
-  for(i in training.data){
+  
     current.row <- length(training.data) + 1
     j <- 1
     while(j < current.row){
       training.data$weight[j] <- 1*(decay.rate^(current.row - j))
-      j <- j + 1
       array$distance[j] <- sqrt(abs(x.val-training.data$x[j])^2 + abs(y.val-training.data$y[j])^2)
       array$similarity[j] <- exp(-sensitivity*distance)
       array$mweighted.simularity[j] <- array$simularity[j] * training.data$weight[j]
-      }}
-  
-  
-  
-  return(NA)
+      j <- j + 1
+      }
+    probability <- sum(array$mweighted.simularity) / sum(array$similarity)
+    return(probability)
 }
 
 # Once you have the model implemented, write the log-likelihood function for a set of data.
@@ -73,7 +71,12 @@ sample.data.set[4,]
 # Don't forget that decay rate should be between 0 and 1, and that sensitivity should be > 0.
 
 exemplar.memory.log.likelihood <- function(all.data, sensitivity, decay.rate){
-  return(NA)
+ row.index <- 1
+ for(c.row in all.data){
+   all.data$probability <- exemplar.memory.limited(all.data[1:row.index,], c.row$x, c.row$y, c.row$category, sensitivity, decay.rate)
+   row.index <- row.index + 1
+ }
+ return(NA)
 }
 
 
